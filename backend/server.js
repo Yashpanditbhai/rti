@@ -13,8 +13,27 @@ const rtiRoutes = require('./routes/rtiRoutes');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
-// Connect to MongoDB
-connectDB();
+const User = require('./models/User');
+const RTI = require('./models/RTI');
+
+// Connect to MongoDB and auto-seed if empty
+connectDB().then(async () => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      await User.create({ name: 'Admin User', email: 'admin@rti.com', password: 'admin123', role: 'admin' });
+      console.log('Admin user seeded');
+    }
+    const rtiCount = await RTI.countDocuments();
+    if (rtiCount === 0) {
+      const { seedData } = require('./seeds/data');
+      await RTI.insertMany(seedData);
+      console.log(`${seedData.length} RTI records seeded`);
+    }
+  } catch (err) {
+    console.error('Auto-seed error:', err.message);
+  }
+});
 
 const app = express();
 
