@@ -53,13 +53,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
 app.use('/api/rti', rtiRoutes);
 
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'RTI Management System API',
-    docs: '/api-docs',
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
+  app.use(express.static(frontendPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
   });
-});
+} else {
+  app.get('/', (req, res) => {
+    res.json({ message: 'RTI Management System API', docs: '/api-docs' });
+  });
+}
 
 // Error handling middleware
 app.use(errorHandler);
